@@ -9,11 +9,18 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^5.1.0",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "jsonwebtoken": "^9.0.0",
     "nodemon": "^2.0.21",
     "pg": "^8.10.0",
     "pg-hstore": "^2.3.4",
-    "sequelize": "^6.29.3"
+    "postgres": "^3.3.4",
+    "sequelize": "^6.29.3",
+    "sequelize-cli": "^6.6.0"
   }
 }

@@ -1,19 +1,21 @@
 require('dotenv').config();
 const express = require("express");
+const session = require('express-session'); 
 const path = require("path");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const cookieParser = require("cookie-parser");
 
 const app = express();
+app.use(cors());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
-app.route('/signup')
-    .get((req, res) => {
-        res.send('Register a new user');
-    })
-    .post((req, res) => {
-        res.send('Add a new user');
-    })
-;
+// API
+const api = require("./api");
+app.use('/api',api);
 
 
-app.get('*', (req,res) =>{
-    res.sendFile(path.join(__dirname+'/landing-page/build/index.html'));
+app.listen(3000, () => {
+    console.log("Server running on port 3000 => http://localhost:3000/");
 });
