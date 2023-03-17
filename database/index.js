@@ -16,7 +16,9 @@ const sequelize = new Sequelize(URL,
         }
     });
 
-sequelize.sync({ force: false });
+sequelize.sync(
+    //{ alter: true } //<- this will alter the table and recreate it , { force: true } //<- this will drop the table if it already exists!
+    );
 
 (async () => {
     try {
