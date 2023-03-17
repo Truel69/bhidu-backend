@@ -1,7 +1,22 @@
 
 const Student = require('../models/student');
 
+const btmatdeyaar = (err) => {
+    console.log(err);
 
+    // put all error messages in a list and return it
+
+    let errorResponse = [];
+
+    if (err.errors) {
+        err.errors.forEach((error) => {
+            errorResponse.push(error.message);
+        });
+    } else {
+        errorResponse.push(err.message);
+    }
+
+}
 
 module.exports.signup_get = (req, res) => {
     res.send("Signup page");
@@ -14,20 +29,25 @@ module.exports.login_get = (req, res) => {
 module.exports.signup_post = async (req, res) => {
     const { username, email, passwd, first_name, last_name } = req.body;
 
-    const newUser = await Student.create({
-        username,
-        first_name,
-        last_name,
-        email,
-        passwd,
-    })
-    // catch validation error and return
-    
+    try {
+        const newUser = await Student.create({
+            username,
+            first_name,
+            last_name,
+            email,
+            passwd,
+            id : await Student.count() + 1
+        });
+        
+        await newUser.save()
+        
+        res.send("Registration successful");
 
-    await newUser.save()
-        .catch(err => res.status(500).send({error:err.message}));
+    } catch (err) {
+        let errorResponse = btmatdeyaar(err);
+        res.status(400).send(errorResponse);
+    }
 
-    res.send("Registration successful");
 }
 
 module.exports.login_post = async (req, res) => {

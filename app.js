@@ -32,6 +32,11 @@ app.use((error, req, res, next) => {
     });
 });
 
+
+app.get("/", (req, res) => {
+    res.send("Hello World!");
+});
+
 app.listen(3000, () => {
     console.log("Server running on port 3000 => http://localhost:3000/");
 });

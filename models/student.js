@@ -15,68 +15,67 @@ id INT,
 	bio TEXT,
 	college VARCHAR(12)
     */
-
-const Student = sequelize.define('students', {
-    id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
-        primaryKey: true,
-        allowNull: false
-    },
-    username: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-        validate:{
-            len: [3, 12]
+try {
+    const Student = sequelize.define('students', {
+        id: {
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
+            primaryKey: true,
+            allowNull: false
+        },
+        username: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            unique: true,
+            validate:{
+                len: [3, 12]
+            }
+        },
+        email: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            unique: true,
+            validate:{
+                isEmail: true
+            }
+        },
+        passwd: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            validate:{
+                len: [8, 30]
+            }
+        },
+        first_name: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        last_name: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        gender: {
+            type: DataTypes.STRING,
+        },
+        address: {
+            type: DataTypes.STRING,
+        },
+        dob: {
+            type: DataTypes.DATE,
+        },
+        bio: {
+            type: DataTypes.TEXT,
+        },
+        college: {
+            type: DataTypes.STRING,
         }
-    },
-    email: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-        validate:{
-            isEmail: true
-        }
-    },
-    passwd: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        validate:{
-            len: [8, 30]
-        }
-    },
-    first_name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    last_name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    age: {
-        type: DataTypes.INTEGER,
-    },
-    gender: {
-        type: DataTypes.STRING,
-    },
-    address: {
-        type: DataTypes.STRING,
-    },
-    dob: {
-        type: DataTypes.DATE,
-    },
-    bio: {
-        type: DataTypes.TEXT,
-    },
-    college: {
-        type: DataTypes.STRING,
-    }
 
-},{
-    timestamps: false
-});
+    },{
+        timestamps: false
+    });
+    
+    module.exports = Student;
+} catch (err) {
+    console.log(err);
+}
 
-
-
-module.exports = Student;
