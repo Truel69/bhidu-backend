@@ -1,5 +1,6 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../database');
+const bcrypt = require('bcrypt');
 // const validator = require('validator');
 
 /*
@@ -26,24 +27,37 @@ try {
         username: {
             type: DataTypes.STRING,
             allowNull: false,
-            unique: true,
+            unique: {
+                args: true,
+                msg: "Username already in use"},
             validate:{
-                len: [3, 12]
+                len: {
+                    args:[4, 12],
+                    msg: "Username must be between 4 and 12 characters"
+                },
             }
         },
         email: {
             type: DataTypes.STRING,
             allowNull: false,
-            unique: true,
+            unique: {
+                args: true,
+                msg: "Email already in use"},
             validate:{
-                isEmail: true
+                isEmail: {
+                    args: true,
+                    msg: "Please enter a valid email address"
+                },
             }
         },
         passwd: {
             type: DataTypes.STRING,
             allowNull: false,
             validate:{
-                len: [8, 30]
+                len: {
+                    args:[8, 30],
+                    msg: "Password must be between 8 and 30 characters"
+                },
             }
         },
         first_name: {
@@ -74,6 +88,17 @@ try {
         timestamps: false
     });
     
+    Student.beforeCreate(async (student, options) => {
+        const salt = await bcrypt.genSalt(10);
+        student.passwd = await bcrypt.hash(student.passwd, salt);
+    });
+
+    // Student.addHook('afterSave', async (student, options) => {
+    //     console.log("Student added");
+    //     next();
+    // });
+
+
     module.exports = Student;
 } catch (err) {
     console.log(err);

@@ -2,19 +2,18 @@
 const Student = require('../models/student');
 
 const btmatdeyaar = (err) => {
-    console.log(err);
 
-    // put all error messages in a list and return it
-
-    let errorResponse = [];
-
+    let errorResponse = {};
+    
     if (err.errors) {
-        err.errors.forEach((error) => {
-            errorResponse.push(error.message);
+        Object.values(err.errors).forEach(err => {
+            errorResponse[err.path] = err.message;
         });
     } else {
-        errorResponse.push(err.message);
+        errorResponse = err;
     }
+
+    return errorResponse;
 
 }
 
@@ -45,7 +44,7 @@ module.exports.signup_post = async (req, res) => {
 
     } catch (err) {
         let errorResponse = btmatdeyaar(err);
-        res.status(400).send(errorResponse);
+        res.status(400).json(errorResponse);
     }
 
 }
