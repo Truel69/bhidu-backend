@@ -17,6 +17,16 @@ const btmatdeyaar = (err) => {
 
 }
 
+const duration = 60 * 60 * 24 * 7; // 7 days
+
+const createJWT = (id, duration) => {
+    
+    return jwt.sign(
+        { id },
+        process.env.JWT_SECRET,
+        { expiresIn: duration });
+}
+
 module.exports.signup_get = (req, res) => {
     res.send("Signup page");
 }
@@ -40,6 +50,10 @@ module.exports.signup_post = async (req, res) => {
         
         await newUser.save()
         
+        const token = createJWT(newUser.id, duration);
+
+        res.cookie('jwt', token, { httpOnly: true, maxAge: duration * 1000 });
+        
         res.send("Registration successful");
 
     } catch (err) {
@@ -59,7 +73,14 @@ module.exports.login_post = async (req, res) => {
     
     if(!user) return res.status(400).send("Email not found");
 
-    if (user.passwd !== passwd) return res.status(400).send("Wrong password");
+    const auth = await bcrypt.compare(passwd, user.passwd)
+
+    if (auth) {
+        const token = createJWT(user.id, duration);
+        res.cookie('jwt', token, { httpOnly: true, maxAge: duration * 1000 });
+    } else {
+        return res.status(400).send("Password incorrect");
+    }
 
     res.send("Login successful");
 

@@ -10,6 +10,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(cookieParser());
 
 // auth ruotes
 const authroutes = require("./routes/auth");
