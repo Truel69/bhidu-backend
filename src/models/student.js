@@ -1,6 +1,7 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../database');
+const sequelize = require('../config/db.connect.js');
 const bcrypt = require('bcrypt');
+const { sendVerificationMail } = require('../middleware/mailVerif');
 // const validator = require('validator');
 
 /*
@@ -82,6 +83,14 @@ try {
         },
         college: {
             type: DataTypes.STRING,
+        },
+
+        confirmation_token: {
+            type: DataTypes.STRING,
+        },
+        email_verified: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
         }
 
     },{
@@ -91,13 +100,16 @@ try {
     Student.beforeCreate(async (student, options) => {
         const salt = await bcrypt.genSalt(10);
         student.passwd = await bcrypt.hash(student.passwd, salt);
+        // generate random string token for email verification link
+        student.confirmation_token = await bcrypt.genSalt(5);
+        // send verification mail
+        await sendVerificationMail(student.email, student.confirmation_token);
     });
 
     // Student.addHook('afterSave', async (student, options) => {
     //     console.log("Student added");
     //     next();
     // });
-
 
     module.exports = Student;
 } catch (err) {

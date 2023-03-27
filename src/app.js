@@ -12,9 +12,20 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 
-// auth ruotes
-const authroutes = require("./routes/auth");
-app.use(authroutes);
+
+// Testing with barebones frontend
+app.set("views", path.join(__dirname, "views"));
+app.set("view engine", "ejs");
+app.use(express.static(path.join(__dirname, "public")));
+
+// student authentication ruotes
+const studentAuthRoutes = require("./routes/studentAuth.routes");
+app.use(studentAuthRoutes);
+
+// Onbbording routes
+const oboardingRoutes = require("./routes/onboarding.routes");
+app.use(oboardingRoutes);
+
 
 // Error handling
 
