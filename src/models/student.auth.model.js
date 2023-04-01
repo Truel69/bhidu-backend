@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db.connect.js');
 const bcrypt = require('bcrypt');
-const { sendVerificationMail } = require('../middleware/mailVerif');
+const { sendVerificationMail } = require('../middleware/verification.middleware');
 // const validator = require('validator');
 
 /*

@@ -1,5 +1,4 @@
 node_modules
-views
+
 .sequelizerc
 package-lock.json
-public
