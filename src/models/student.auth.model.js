@@ -70,6 +70,9 @@ try {
         confirmation_token: {
             type: DataTypes.STRING,
         },
+        reset_token: {
+            type: DataTypes.STRING,
+        },
         email_verified: {
             type: DataTypes.BOOLEAN,
             defaultValue: false

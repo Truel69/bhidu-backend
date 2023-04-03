@@ -1,17 +1,20 @@
 const Student = require('../models/student.auth.model');
 // const Student = require('../testing/student.auth.model');
 const bcrypt = require('bcrypt');
-const { verifyEmail } = require('../middleware/verification.middleware');
-const { createJWT, requireAuth, checkUser  } = require('../middleware/auth.middleware');
-
-const {sendVerificationMail} = require('../middleware/verification.middleware');
-
+const { sendVerificationMail, verifyEmail } = require('../middleware/verification.middleware');
+const { createJWT, forgot_passwd, reset_passwd  } = require('../middleware/auth.middleware');
 
 module.exports.login_get = (req, res) => {
+    if (req.cookies.jwt) {
+        res.redirect('/');
+    }
     res.render('login');
 };
 
 module.exports.signup_get = (req, res) => {
+    if (req.cookies.jwt) {
+        res.redirect('/');
+    }
     res.render('signup');
 };
 
@@ -115,15 +118,67 @@ module.exports.logout_get = (req, res) => {
     res.redirect('/');
 }
 
-module.exports.reset_get = (req, res) => {
-    res.render('reset');
+module.exports.forgot_get = (req, res) => {
+    res.render('forgot');
 }
 
-module.exports.reset_post = (req, res) => {
-    const mail = req.body.email;
-    const student = Student.findOne({where : {email : mail}});
-    if (!student) {
-        res.status(400).send("Email not found");
+module.exports.forgot_post = async (req, res) => {
+    try {
+        const mail = req.body.email;
+        const student = await Student.findOne({where : {email : mail}});
+        if (!student) {
+            res.status(400).send("Email not found");
+        }
+        forgot_passwd(req,student);
+        res.send("Email sent");
+    } catch {
+        res.status(400).send("Error");
     }
+}
+
+module.exports.reset_get = (req, res) => {
+    
+    try {
+        const token = req.query.token;
+        const student = Student.findOne({where : {reset_token : token}});
+
+        if (!token) {
+            res.status(400).send("Invalid token");
+        }
+
+        if (!student) {
+            res.status(400).send("Invalid token");
+        }
+
+        res.render('reset');
+    } catch {
+        res.status(400).send("Error");
+    }
+}
+
+module.exports.reset_post = async (req, res) => {
+    const token = req.query.token;
+    const student = Student.findOne({where : {reset_token : token}});
+    if (!student) {
+        res.status(400).send("not found");
+    }
+    const old_passwd = req.body.old_passwd;
+    const new_passwd = req.body.new_passwd;
+    const confirm_passwd = req.body.confirm_passwd;
+
+    const verify_old = await bcrypt.compare(old_passwd, student.passwd);
+    if (!verify_old) {
+        res.status(400).send("Incorrect password");
+    }
+
+    if (new_passwd != confirm_passwd) {
+        res.status(400).send("Passwords do not match");
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    student.passwd = await bcrypt.hash(new_passwd, salt);
+    await student.save();
+
+    res.send("Password changed");
 
 }
