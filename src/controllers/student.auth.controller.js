@@ -58,7 +58,7 @@ module.exports.login_post = async (req, res) => {
         
         const student = await Student.findOne({ where: { email: email } });
         if (student) {
-            if (student.is_verified == false) {
+            if (student.email_verified == false) {
                 return res.status(400).send("Email not verified");
             }
             const auth = await bcrypt.compare(passwd, student.passwd);
@@ -109,3 +109,21 @@ module.exports.verify_get = async (req, res) => {
     }
 }
 
+
+module.exports.logout_get = (req, res) => {
+    res.cookie('jwt', '', { maxAge: 1 });
+    res.redirect('/');
+}
+
+module.exports.reset_get = (req, res) => {
+    res.render('reset');
+}
+
+module.exports.reset_post = (req, res) => {
+    const mail = req.body.email;
+    const student = Student.findOne({where : {email : mail}});
+    if (!student) {
+        res.status(400).send("Email not found");
+    }
+
+}

@@ -47,7 +47,7 @@ async function sendVerificationMail(req, email, token) {
 }
 
 async function verifyEmail(token) {
-    const student = await Student.findOne({ confirmation_token: token });
+    const student = await Student.findOne({where : { confirmation_token: token }});
     if (student) {
         student.email_verified = true;
         student.confirmation_token = '';
