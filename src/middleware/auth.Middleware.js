@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
-const Student = require('../testing/student.auth.model');  // Testing model
-// const Student = require('../models/student');    // Actual model
+// const Student = require('../testing/student.auth.model');  // Testing model
+const Student = require('../models/student.auth.model');    // Actual model
 
 
 const createJWT = (id, duration) => {
@@ -41,7 +41,7 @@ const checkUser = (req, res, next) => {
                 res.locals.user = null;
                 next();
             } else {
-                let user = await Student.findById(decodedToken.id);
+                let user = await Student.findOne({where : {id : decodedToken.id}});
                 res.locals.user = user;
                 next();
             }

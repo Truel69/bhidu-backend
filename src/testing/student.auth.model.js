@@ -46,7 +46,6 @@ const studentSchema = new mongoose.Schema({
 
 studentSchema.pre('save', async function(next) {
 
-    console.log(this.passwd);
     // trivial function to generate random string token for email verification link
     
     function randomString(length) {

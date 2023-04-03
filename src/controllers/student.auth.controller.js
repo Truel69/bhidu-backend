@@ -1,8 +1,7 @@
-// const Student = require('../models/student.auth.model');
-const Student = require('../testing/student.auth.model');
+const Student = require('../models/student.auth.model');
+// const Student = require('../testing/student.auth.model');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-// const { verifyEmail } = require('../middleware/verification.middleware');
+const { verifyEmail } = require('../middleware/verification.middleware');
 const { createJWT, requireAuth, checkUser  } = require('../middleware/auth.middleware');
 
 const {sendVerificationMail} = require('../middleware/verification.middleware');
@@ -53,37 +52,37 @@ module.exports.signup_post = async (req, res) => {
 module.exports.login_post = async (req, res) => {
     const { email, passwd } = req.body;
 
-    // check if username and/or email already in use
     try {
 
         // pgsql code :
         
-        // const student = await Student.findOne({ where: { email: email } });
-        // if (student) {
-        //     const auth = await bcrypt.compare(passwd, student.passwd);
-        //     if (auth) {
-        //         console.log('Authorized')
-        //         const token = createJWT(student.id, duration);
-        //         res.cookie('jwt', token, { httpOnly: true, maxAge: duration * 1000 });
-                
-        //         res.status(200).json({ student: student });
-        //     } else {
-        //         res.status(400).send("Incorrect password");
-        //     }
-        // } else {
-        //     res.status(400).send("Incorrect email");
-        // }
+        const student = await Student.findOne({ where: { email: email } });
+        if (student) {
+            if (student.is_verified == false) {
+                return res.status(400).send("Email not verified");
+            }
+            const auth = await bcrypt.compare(passwd, student.passwd);
+            if (auth) {
+                const duration = 7 * 24 * 60 * 60;
+                const token = createJWT(student.id, duration);
+                res.cookie('jwt', token, { httpOnly: true, maxAge: duration * 1000 });
+                res.status(200).json({ student: student.id });
+            } else {
+                res.status(400).send("Incorrect password");
+            }
+        } else {
+            res.status(400).send("Incorrect email");
+        }
 
         // mongodb code :
-        const student = await Student.login(email, passwd);
-        const duration = 7 * 24 * 60 * 60;
-        const token = createJWT(student._id, duration);
-        res.cookie('jwt', token, { httpOnly: true, maxAge: duration * 1000 });
-        res.status(200).json({ student: student._id });
+        // const student = await Student.login(email, passwd);
+        // const duration = 7 * 24 * 60 * 60;
+        // const token = createJWT(student._id, duration);
+        // res.cookie('jwt', token, { httpOnly: true, maxAge: duration * 1000 });
+        // res.status(200).json({ student: student._id });
 
     } catch (err) {
         console.log(err);
-        console.log('???')
         res.status(400).send({err:err.message});
     }
 
@@ -94,7 +93,10 @@ module.exports.verify_get = async (req, res) => {
     try {
         const token = req.query.id;
         console.log(token);
-        const verified = await Student.verify(token);
+        // const verified = await Student.verify(token);
+
+        const verified = await verifyEmail(token);
+
         if (verified) {
             res.setHeader('Content-type','text/html');
             res.send("Email verified <a href='/login'>Login</a>");

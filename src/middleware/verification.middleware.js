@@ -1,7 +1,7 @@
 require("dotenv").config();
 const nodemailer = require("nodemailer");
-// const Student = require("../models/student.auth.model");    // Actual model
-const Student = require("../testing/student.auth.model");  // Testing model
+const Student = require("../models/student.auth.model");    // Actual model
+// const Student = require("../testing/student.auth.model");  // Testing model
 
 async function sendVerificationMail(req, email, token) {
 
@@ -46,21 +46,15 @@ async function sendVerificationMail(req, email, token) {
     
 }
 
-async function verifyEmail(req, res) {
-    try {
-        const token = req.query.id;
-        const user = await Student.findOne({ confirmation_token: token });
-        if (user) {
-            user.verified = true;
-            user.confirmation_token = null;
-            // await user.save();
-            res.redirect('/login');
-        } else {
-            res.send("User not found");
-        }
-    } catch (error) {
-        console.log(error);
+async function verifyEmail(token) {
+    const student = await Student.findOne({ confirmation_token: token });
+    if (student) {
+        student.email_verified = true;
+        student.confirmation_token = '';
+        await student.save();
+        return student;
     }
+    throw Error('incorrect token');
 }
 
 module.exports = { sendVerificationMail, verifyEmail };

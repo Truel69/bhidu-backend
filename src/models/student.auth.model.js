@@ -1,7 +1,5 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/db.connect.js');
-const bcrypt = require('bcrypt');
-const { sendVerificationMail } = require('../middleware/verification.middleware');
 // const validator = require('validator');
 
 /*
@@ -55,8 +53,8 @@ try {
             type: DataTypes.STRING,
             allowNull: false,
             validate:{
-                len: {
-                    args:[8, 30],
+                min: {
+                    args:[8],
                     msg: "Password must be between 8 and 30 characters"
                 },
             }
@@ -69,22 +67,6 @@ try {
             type: DataTypes.STRING,
             allowNull: false,
         },
-        gender: {
-            type: DataTypes.STRING,
-        },
-        address: {
-            type: DataTypes.STRING,
-        },
-        dob: {
-            type: DataTypes.DATE,
-        },
-        bio: {
-            type: DataTypes.TEXT,
-        },
-        college: {
-            type: DataTypes.STRING,
-        },
-
         confirmation_token: {
             type: DataTypes.STRING,
         },
@@ -98,12 +80,17 @@ try {
     });
     
     Student.beforeCreate(async (student, options) => {
-        const salt = await bcrypt.genSalt(10);
-        student.passwd = await bcrypt.hash(student.passwd, salt);
-        // generate random string token for email verification link
-        student.confirmation_token = await bcrypt.genSalt(5);
-        // send verification mail
-        await sendVerificationMail(student.email, student.confirmation_token);
+        function randomString(length) {
+            var result = '';
+            var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+            var charactersLength = characters.length;
+            for ( var i = 0; i < length; i++ ) {
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+                }
+            return result;
+        }
+
+        student.confirmation_token = randomString(15);
     });
 
     // Student.addHook('afterSave', async (student, options) => {
