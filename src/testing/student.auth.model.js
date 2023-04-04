@@ -10,6 +10,12 @@ const bcrypt = require('bcrypt');
 // first_name , last_name, username, email, passwd, confirmation_token, verified
 
 const studentSchema = new mongoose.Schema({
+    id: {
+        type: Number,
+        autoIncrement: true,
+        primaryKey: true,
+        allowNull: false
+    },
     first_name: {
         type: String,
         required: true,
@@ -38,10 +44,17 @@ const studentSchema = new mongoose.Schema({
     confirmation_token: {
         type: String,
     },
-    verified: {
+    email_verified: {
         type: Boolean,
-        default: false,
+        defaultValue: false
     },
+    reset_token: {
+        type: String,
+    },
+    reset_token_expires: {
+        type: Date,
+    },
+
 });
 
 studentSchema.pre('save', async function(next) {
@@ -58,7 +71,12 @@ studentSchema.pre('save', async function(next) {
         return result;
     }
 
-    this.confirmation_token = randomString(15);
+//  Sequelize uses before create but mongoose uses pre save so everytime the document is saved it gets resetted to this so to avoid that we use this if statement
+    if (!this.email_verified){
+
+        this.email_verified = false;
+        this.confirmation_token = randomString(15);
+    }
 
 
     next();

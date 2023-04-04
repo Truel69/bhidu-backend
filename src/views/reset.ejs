@@ -1,0 +1,22 @@
+<%- include('partials/header'); -%>
+
+<form action="/reset" method="post">
+    <h2>Reset Password for <%= user.username %> </h2>
+
+    <input type ="text" name="username" value="<%= user.username %>" hidden />
+
+    <input type="text" name="token" value="<%= user.reset_token %>" hidden />
+   
+    <label for="old_passwd">Old Password</label>
+    <input type="password" name="old_passwd" required />
+
+    <label for="new_passwd">New Password</label>
+    <input type="password" name="new_passwd" required />
+
+    <label for="confirm_passwd">Confirm New Password</label>
+    <input type="password" name="confirm_passwd" required />
+    
+    <button type="submit">Sign up</button>
+</form>
+
+<%- include('partials/footer'); -%>

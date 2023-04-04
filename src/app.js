@@ -22,6 +22,7 @@ app.set("view engine", "ejs");
 app.use(express.static(path.join(__dirname, "/public")));
 
 
+// Testing db
 mongoose.connect(process.env.MONGODB_URL, {
     useNewUrlParser: true,
 });

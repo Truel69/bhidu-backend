@@ -6,9 +6,14 @@ const router = Router();
 // Get routes for testing purposes
 router.get('/signup', studentAuthController.signup_get);
 router.get('/login', studentAuthController.login_get);
+router.get('/logout', studentAuthController.logout_get);
 
 // Email verification
 router.get('/verify', studentAuthController.verify_get);
+
+// Password forgot
+router.get('/forgot', studentAuthController.forgot_get);
+router.post('/forgot', studentAuthController.forgot_post);
 
 // Password reset
 router.get('/reset', studentAuthController.reset_get);

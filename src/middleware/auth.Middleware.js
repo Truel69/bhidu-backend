@@ -1,8 +1,8 @@
 const jwt = require('jsonwebtoken');
-// const Student = require('../testing/student.auth.model');  // Testing model
-const Student = require('../models/student.auth.model');    // Actual model
+//const Student = require('../models/student.auth.model');    // Actual model
+const Student = require('../testing/student.auth.model');  // Testing model
 const nodemailer = require('nodemailer');
-
+const bcrypt = require('bcrypt');
 
 const createJWT = (id, duration) => {
      // 7 days
@@ -42,7 +42,8 @@ const checkUser = (req, res, next) => {
                 res.locals.user = null;
                 next();
             } else {
-                let user = await Student.findOne({where : {id : decodedToken.id}});
+                // let user = await Student.findOne({where : {id : decodedToken.id}});
+                let user = await Student.findOne({id: decodedToken.id});
                 res.locals.user = user;
                 next();
             }
@@ -67,22 +68,40 @@ async function forgot_passwd(req,student){
     }
 
     const token = randomString(10);
+    
+    student.reset_token = token;
+    student.reset_token_expires = Date.now() + 3600000; // 1 hour
 
-    const transporter = nodemailer.createTransport({
-        service: 'gmail',
+    await student.save();
+
+    acc = {
+        user: process.env.mail,
+        pass: process.env.mail_pass
+    }
+
+    // create reusable transporter object using the default SMTP transport
+    let transporter = nodemailer.createTransport({
+        
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false, // true for 465, false for other ports
         auth: {
-            user: process.env.EMAIL,
-            pass: process.env.PASSWORD
+            user: acc.user, 
+            pass: acc.pass, 
+        },
+        tls: {
+            rejectUnauthorized: false
         }
+
     });
 
-    let link = "http://"+req.get('host')+"/verify?id="+token;
+    let link = "http://"+req.get('host')+"/reset?id="+token;
 
     const mailOptions = {
         from: process.env.EMAIL,
         to: student.email,
         subject: 'Password Reset Link',
-        html: `Click <a href=${link}>here</a> to reset password`
+        html: `Click <a href=${link}>here</a> to reset password <br> Expires in one hour`
     };
 
     transporter.sendMail(mailOptions, function(error, info){
@@ -95,8 +114,51 @@ async function forgot_passwd(req,student){
 
 }
 
-async function reset_passwd(token,old_pass,new_pass,student) {
+async function reset_passwd(username,token ,old_passwd,new_passwd,confirm_passwd) {
+
+    if(!username) {
+        throw("Invalid user");
+    }
+
+    if(!token) {
+        throw("Invalid token");
+    }
+
+    // const student = await Student.findOne({where : {reset_token : token}});
+    const student = await Student.findOne({username : username});
+
+    if (!student) {
+        throw("User does not exist");
+    }
+
+    if (student.reset_token != token) {
+        throw("Invalid token for user");
+    }
+
+    if (student.reset_token_expires < Date.now()) {
+        throw("Token expired");
+    }
+
+    const verify_old = await bcrypt.compare(old_passwd, student.passwd);
+
+    if (!verify_old) {
+        throw("Incorrect password");
+    }
+
+    if (new_passwd != confirm_passwd) {
+        throw("Passwords do not match");
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    student.passwd = await bcrypt.hash(new_passwd, salt);
+
+    student.reset_token = "";
+    student.reset_token_expires = "";
+
+    await student.save();
+
+    return student;
 
 }
 
-module.exports = { createJWT,requireAuth, checkUser, reset_passwd, forgot_passwd }
+module.exports = { createJWT, requireAuth, checkUser, reset_passwd, forgot_passwd }

@@ -1,6 +1,8 @@
-const Student = require('../models/student.auth.model');
-// const Student = require('../testing/student.auth.model');
+//const Student = require('../models/student.auth.model'); // Actual model
+const Student = require('../testing/student.auth.model'); // Testing model
+
 const bcrypt = require('bcrypt');
+
 const { sendVerificationMail, verifyEmail } = require('../middleware/verification.middleware');
 const { createJWT, forgot_passwd, reset_passwd  } = require('../middleware/auth.middleware');
 
@@ -59,7 +61,8 @@ module.exports.login_post = async (req, res) => {
 
         // pgsql code :
         
-        const student = await Student.findOne({ where: { email: email } });
+        // const student = await Student.findOne({ where: { email: email } });
+        const student = await Student.findOne({ email: email });
         if (student) {
             if (student.email_verified == false) {
                 return res.status(400).send("Email not verified");
@@ -95,7 +98,6 @@ module.exports.login_post = async (req, res) => {
 module.exports.verify_get = async (req, res) => {
     try {
         const token = req.query.id;
-        console.log(token);
         // const verified = await Student.verify(token);
 
         const verified = await verifyEmail(token);
@@ -112,10 +114,13 @@ module.exports.verify_get = async (req, res) => {
     }
 }
 
-
 module.exports.logout_get = (req, res) => {
-    res.cookie('jwt', '', { maxAge: 1 });
-    res.redirect('/');
+    try {
+        res.cookie('jwt', '', { maxAge: 1 });
+        res.redirect('/');
+    } catch {
+        res.status(400).send("Error");
+    }
 }
 
 module.exports.forgot_get = (req, res) => {
@@ -125,7 +130,9 @@ module.exports.forgot_get = (req, res) => {
 module.exports.forgot_post = async (req, res) => {
     try {
         const mail = req.body.email;
-        const student = await Student.findOne({where : {email : mail}});
+        // const student = await Student.findOne({where : {email : mail}});
+        const student = await Student.findOne({email : mail});
+
         if (!student) {
             res.status(400).send("Email not found");
         }
@@ -136,49 +143,56 @@ module.exports.forgot_post = async (req, res) => {
     }
 }
 
-module.exports.reset_get = (req, res) => {
+module.exports.reset_get = async(req, res) => {
     
     try {
-        const token = req.query.token;
-        const student = Student.findOne({where : {reset_token : token}});
+        
+        const token = req.query.id;
 
-        if (!token) {
-            res.status(400).send("Invalid token");
+        if(!token) {
+            return res.status(400).send("Invalid token - None provided");
         }
 
+        // const student = Student.findOne({where : {reset_token : token}});
+        const student = await Student.findOne({reset_token : token});
+        
         if (!student) {
-            res.status(400).send("Invalid token");
+            return res.status(400).send("Invalid token - Not found");
         }
 
+        const expiry = student.reset_token_expires;
+
+        if (Date.now() > expiry) {
+            return res.status(400).send("Token expired");
+        }
+
+        res.locals.user = student;
+        
         res.render('reset');
+
     } catch {
         res.status(400).send("Error");
     }
 }
 
 module.exports.reset_post = async (req, res) => {
-    const token = req.query.token;
-    const student = Student.findOne({where : {reset_token : token}});
-    if (!student) {
-        res.status(400).send("not found");
-    }
-    const old_passwd = req.body.old_passwd;
-    const new_passwd = req.body.new_passwd;
-    const confirm_passwd = req.body.confirm_passwd;
+    
+    try {
+        const old_passwd = req.body.old_passwd;
+        const new_passwd = req.body.new_passwd;
+        const confirm_passwd = req.body.confirm_passwd;
+        const username = req.body.username;
+        const token = req.body.token;
 
-    const verify_old = await bcrypt.compare(old_passwd, student.passwd);
-    if (!verify_old) {
-        res.status(400).send("Incorrect password");
-    }
+        const resetStatus = await reset_passwd(username,token,old_passwd,new_passwd,confirm_passwd)
+        
+        if (resetStatus) {
+            res.send("Password changed");
+        } else {
+            res.status(400).send("Error");
+        }
 
-    if (new_passwd != confirm_passwd) {
-        res.status(400).send("Passwords do not match");
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    student.passwd = await bcrypt.hash(new_passwd, salt);
-    await student.save();
-
-    res.send("Password changed");
-
+    } catch(err) {
+        res.status(400).send(err);
+    }  
 }

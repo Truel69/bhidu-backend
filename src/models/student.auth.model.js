@@ -76,7 +76,13 @@ try {
         email_verified: {
             type: DataTypes.BOOLEAN,
             defaultValue: false
-        }
+        },
+        reset_token: {
+            type: DataTypes.STRING,
+        },
+        reset_token_expires: {
+            type: DataTypes.DATE,
+        },
 
     },{
         timestamps: false
