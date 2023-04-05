@@ -114,14 +114,10 @@ async function forgot_passwd(req,student){
 
 }
 
-async function reset_passwd(username,token ,old_passwd,new_passwd,confirm_passwd) {
+async function reset_passwd(username,forgot,new_passwd,confirm_passwd) {
 
     if(!username) {
         throw("Invalid user");
-    }
-
-    if(!token) {
-        throw("Invalid token");
     }
 
     // const student = await Student.findOne({where : {reset_token : token}});
@@ -131,20 +127,21 @@ async function reset_passwd(username,token ,old_passwd,new_passwd,confirm_passwd
         throw("User does not exist");
     }
 
-    if (student.reset_token != token) {
-        throw("Invalid token for user");
+    if(!forgot.bool) {
+        const auth = await bcrypt.compare(forgot.old_passwd, student.passwd);
+        if (!auth) {
+            throw("Wrong password entered");
+        }
+    } else {            
+        if (student.reset_token != forgot.token) {
+            throw("Invalid token for user");
+        }
+
+        if (student.reset_token_expires < Date.now()) {
+            throw("Token expired");
+        }
     }
-
-    if (student.reset_token_expires < Date.now()) {
-        throw("Token expired");
-    }
-
-    const verify_old = await bcrypt.compare(old_passwd, student.passwd);
-
-    if (!verify_old) {
-        throw("Incorrect password");
-    }
-
+    
     if (new_passwd != confirm_passwd) {
         throw("Passwords do not match");
     }

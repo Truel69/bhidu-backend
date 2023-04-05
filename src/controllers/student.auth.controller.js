@@ -178,13 +178,16 @@ module.exports.reset_get = async(req, res) => {
 module.exports.reset_post = async (req, res) => {
     
     try {
-        const old_passwd = req.body.old_passwd;
         const new_passwd = req.body.new_passwd;
         const confirm_passwd = req.body.confirm_passwd;
         const username = req.body.username;
         const token = req.body.token;
+        let forgot = {
+            bool: true,
+            token: token
+        }
 
-        const resetStatus = await reset_passwd(username,token,old_passwd,new_passwd,confirm_passwd)
+        const resetStatus = await reset_passwd(username,forgot,new_passwd,confirm_passwd);
         
         if (resetStatus) {
             res.send("Password changed");
@@ -195,4 +198,36 @@ module.exports.reset_post = async (req, res) => {
     } catch(err) {
         res.status(400).send(err);
     }  
+}
+
+module.exports.change_passwd_get = (req, res) => {
+    if(!req.cookies.jwt) {
+        res.redirect('/login');
+    }
+    res.render('change_passwd');
+}
+
+module.exports.change_passwd_post = async (req, res) => {
+    try {
+        const old_passwd = req.body.old_passwd;
+        const new_passwd = req.body.new_passwd;
+        const confirm_passwd = req.body.confirm_passwd;
+        const username = req.body.username;
+        let forgot = {
+            bool: false,
+            old_passwd: old_passwd,
+        }
+
+        const resetStatus = await reset_passwd(username,forgot,new_passwd,confirm_passwd);
+        
+        if (resetStatus) {
+            res.send("Password changed");
+        } else {
+            res.status(400).send("Error");
+        }
+
+    } catch(err) {
+        console.log(err);
+        res.status(400).send(err);
+    }
 }

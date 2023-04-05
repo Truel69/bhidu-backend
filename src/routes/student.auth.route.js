@@ -19,6 +19,10 @@ router.post('/forgot', studentAuthController.forgot_post);
 router.get('/reset', studentAuthController.reset_get);
 router.post('/reset', studentAuthController.reset_post);
 
+// Password change
+router.get('/change_pwd', studentAuthController.change_passwd_get);
+router.post('/change_pwd', studentAuthController.change_passwd_post);
+
 // Post routes
 router.post('/signup', studentAuthController.signup_post);
 router.post('/login', studentAuthController.login_post);
