@@ -1,24 +1,11 @@
 //const Student = require('../models/student.auth.model'); // Actual model
-const Student = require('../testing/student.auth.model'); // Testing model
+const Student = require('../mongo.models/student.model'); // Testing model
 
 const bcrypt = require('bcrypt');
 
+const { requireAuth, createJWT, forgot_passwd, reset_passwd  } = require('../middleware/auth.middleware');
 const { sendVerificationMail, verifyEmail } = require('../middleware/verification.middleware');
-const { createJWT, forgot_passwd, reset_passwd  } = require('../middleware/auth.middleware');
-
-module.exports.login_get = (req, res) => {
-    if (req.cookies.jwt) {
-        res.redirect('/');
-    }
-    res.render('login');
-};
-
-module.exports.signup_get = (req, res) => {
-    if (req.cookies.jwt) {
-        res.redirect('/');
-    }
-    res.render('signup');
-};
+const { randomString } = require('../middleware/token.gen.middleware');
 
 module.exports.signup_post = async (req, res) => {
     const { username, email, passwd, first_name, last_name, confirm_passwd } = req.body;
@@ -40,16 +27,19 @@ module.exports.signup_post = async (req, res) => {
         
         const salt = await bcrypt.genSalt(10);
         newUser.passwd = await bcrypt.hash(passwd, salt);
-        
+
+        const token = await randomString(20);
+        newUser.email_verified = false;
+        newUser.confirmation_token = token;
+        const host = req.get('host');
         await newUser.save();
-        
-        // send verification mail
-        await sendVerificationMail(req, email, newUser.confirmation_token);
+        await sendVerificationMail(email,host,token);
 
         res.send({"response":"Registration successful"});
 
     } catch (err) {
-        res.status(400).json(err);
+        console.log(err)
+        res.status(400).send({err:err.message});
     }
 
 }
@@ -59,16 +49,18 @@ module.exports.login_post = async (req, res) => {
 
     try {
 
-        // pgsql code :
-        
-        // const student = await Student.findOne({ where: { email: email } });
         const student = await Student.findOne({ email: email });
         if (student) {
+
+            // Email is verified
             if (student.email_verified == false) {
                 return res.status(400).send("Email not verified");
             }
+
+            // Passwd check
             const auth = await bcrypt.compare(passwd, student.passwd);
             if (auth) {
+                // gnerate jwt cookie
                 const duration = 7 * 24 * 60 * 60;
                 const token = createJWT(student.id, duration);
                 res.cookie('jwt', token, { httpOnly: true, maxAge: duration * 1000 });
@@ -79,13 +71,6 @@ module.exports.login_post = async (req, res) => {
         } else {
             res.status(400).send("Incorrect email");
         }
-
-        // mongodb code :
-        // const student = await Student.login(email, passwd);
-        // const duration = 7 * 24 * 60 * 60;
-        // const token = createJWT(student._id, duration);
-        // res.cookie('jwt', token, { httpOnly: true, maxAge: duration * 1000 });
-        // res.status(200).json({ student: student._id });
 
     } catch (err) {
         console.log(err);
@@ -98,13 +83,15 @@ module.exports.login_post = async (req, res) => {
 module.exports.verify_get = async (req, res) => {
     try {
         const token = req.query.id;
-        // const verified = await Student.verify(token);
+
+        if (!token) {
+            return res.status(400).send("Invalid token - None provided");
+        }
 
         const verified = await verifyEmail(token);
 
         if (verified) {
-            res.setHeader('Content-type','text/html');
-            res.send("Email verified <a href='/login'>Login</a>");
+            res.send("Email verified");
         } else {
             res.send("Invalid token");
         }
@@ -118,13 +105,10 @@ module.exports.logout_get = (req, res) => {
     try {
         res.cookie('jwt', '', { maxAge: 1 });
         res.redirect('/');
-    } catch {
-        res.status(400).send("Error");
+    } catch (err) {
+        console.log(err);
+        res.status(400).send({err:err.message});
     }
-}
-
-module.exports.forgot_get = (req, res) => {
-    res.render('forgot');
 }
 
 module.exports.forgot_post = async (req, res) => {
@@ -136,44 +120,48 @@ module.exports.forgot_post = async (req, res) => {
         if (!student) {
             res.status(400).send("Email not found");
         }
-        forgot_passwd(req,student);
-        res.send("Email sent");
-    } catch {
-        res.status(400).send("Error");
+        const host = req.get('host');
+
+        forgot_passwd(host,student);
+        res.send("Password reset link sent to email");
+    } catch (err) {
+        console.log(err);
+        res.status(400).send({err:err.message});
     }
 }
 
-module.exports.reset_get = async(req, res) => {
+// configures the reset page according to the token passed in the url and gives access accordingly to the user
+// module.exports.reset_get = async(req, res) => {
     
-    try {
+//     try {
         
-        const token = req.query.id;
+//         const token = req.query.id;
 
-        if(!token) {
-            return res.status(400).send("Invalid token - None provided");
-        }
+//         if(!token) {
+//             return res.status(400).send("Invalid token - None provided");
+//         }
 
-        // const student = Student.findOne({where : {reset_token : token}});
-        const student = await Student.findOne({reset_token : token});
+//         // const student = Student.findOne({where : {reset_token : token}});
+//         const student = await Student.findOne({reset_token : token});
         
-        if (!student) {
-            return res.status(400).send("Invalid token - Not found");
-        }
+//         if (!student) {
+//             return res.status(400).send("Invalid token - Not found");
+//         }
 
-        const expiry = student.reset_token_expires;
+//         const expiry = student.reset_token_expires;
 
-        if (Date.now() > expiry) {
-            return res.status(400).send("Token expired");
-        }
+//         if (Date.now() > expiry) {
+//             return res.status(400).send("Token expired");
+//         }
 
-        res.locals.user = student;
+//         res.locals.user = student;
         
-        res.render('reset');
+//         res.render('reset');
 
-    } catch {
-        res.status(400).send("Error");
-    }
-}
+//     } catch {
+//         res.status(400).send("Error");
+//     }
+// }
 
 module.exports.reset_post = async (req, res) => {
     
@@ -182,6 +170,7 @@ module.exports.reset_post = async (req, res) => {
         const confirm_passwd = req.body.confirm_passwd;
         const username = req.body.username;
         const token = req.body.token;
+
         let forgot = {
             bool: true,
             token: token
@@ -196,15 +185,9 @@ module.exports.reset_post = async (req, res) => {
         }
 
     } catch(err) {
-        res.status(400).send(err);
+        console.log(err);
+        res.status(400).send({err:err.message});
     }  
-}
-
-module.exports.change_passwd_get = (req, res) => {
-    if(!req.cookies.jwt) {
-        res.redirect('/login');
-    }
-    res.render('change_passwd');
 }
 
 module.exports.change_passwd_post = async (req, res) => {

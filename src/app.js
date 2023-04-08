@@ -47,17 +47,18 @@ mongoose.connect(process.env.MONGODB_URL, {
 
 app.get('*',checkUser);
 
-app.get("/", (req, res) => {
-    res.render("home");
-});
-
 // student authentication ruotes
 const studentAuthRoutes = require("./routes/student.auth.route");
-app.use(studentAuthRoutes);
+app.use('/student',studentAuthRoutes);
+
+// Super Admin authentication routes
+// const superAdminAuthRoutes = require("./routes/super.admin.auth.route");
+// app.use('/superadmin',superAdminAuthRoutes);
+
 
 // Onbbording routes
-const oboardingRoutes = require("./routes/onboarding.route");
-app.use(oboardingRoutes);
+// const oboardingRoutes = require("./routes/onboarding.route");
+// app.use(oboardingRoutes);
 
 app.listen(3000, () => {
     console.log("Server running on port 3000 => http://localhost:3000/");

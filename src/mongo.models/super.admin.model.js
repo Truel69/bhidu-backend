@@ -46,17 +46,6 @@ const superAdminSchema = new mongoose.Schema({
 
 superAdminSchema.pre('save', async function(next) {
 
-    // trivial function to generate random string token for email verification link
-    function randomString(length) {
-        var result = '';
-        var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        var charactersLength = characters.length;
-        for ( var i = 0; i < length; i++ ) {
-              result += characters.charAt(Math.floor(Math.random() * charactersLength));
-              }
-        return result;
-    }
-
     // Sequelize uses before create but mongoose uses pre save so everytime the document is saved it gets resetted to this so to avoid that we use this if statement
     if (!this.email_verified){
 
