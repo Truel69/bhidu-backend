@@ -10,15 +10,11 @@ const bcrypt = require('bcrypt');
 // first_name , last_name, username, email, passwd, confirmation_token, verified
 
 const studentSchema = new mongoose.Schema({
-    first_name: {
+    name: {
         type: String,
         required: true,
     },
-    last_name: {
-        type: String,
-        required: true,
-    },
-    username: {
+    id: {
         type: String,
         required: true,
         unique: true,
@@ -30,7 +26,7 @@ const studentSchema = new mongoose.Schema({
         lowercase: true,
         validate: [isEmail, 'Please enter a valid email']
     },
-    passwd: {
+    password: {
         type: String,
         required: [true, 'Please enter a password'],
         minlength: [6, 'Minimum password length is 6 characters'],

@@ -16,7 +16,7 @@ id INT,
 	college VARCHAR(12)
     */
 try {
-    const Student = sequelize.define('students', {
+    const student = sequelize.define('students', {
         id: {
             type: DataTypes.INTEGER,
             autoIncrement: true,
@@ -88,7 +88,7 @@ try {
         timestamps: false
     });
     
-    Student.beforeCreate(async (student, options) => {
+    student.beforeCreate(async (student, options) => {
         function randomString(length) {
             var result = '';
             var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -107,7 +107,7 @@ try {
     //     next();
     // });
 
-    module.exports = Student;
+    module.exports = student;
 } catch (err) {
     console.log(err);
 }
