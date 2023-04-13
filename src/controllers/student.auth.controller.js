@@ -3,14 +3,15 @@ const Student = require('../mongo.models/student.model'); // Testing model
 
 const bcrypt = require('bcrypt');
 
-const { requireAuth, createJWT, forgot_passwd, reset_passwd  } = require('../middleware/auth.middleware');
+const { createJWT } = require('../middleware/auth.middleware');
+const { forgot_passwd, reset_passwd } = require('../middleware/pass.reset.middleware');
 const { sendVerificationMail, verifyEmail } = require('../middleware/verification.middleware');
 const { randomString } = require('../middleware/token.gen.middleware');
 
 module.exports.signup_post = async (req, res) => {
-    const { username, email, passwd, first_name, last_name, confirm_passwd } = req.body;
     
     try {
+        const { username, email, passwd, first_name, last_name, confirm_passwd } = req.body;
 
         if (passwd != confirm_passwd) {
             return res.status(400).send("Passwords do not match");
@@ -31,8 +32,9 @@ module.exports.signup_post = async (req, res) => {
         const token = await randomString(20);
         newUser.email_verified = false;
         newUser.confirmation_token = token;
-        const host = req.get('host');
         await newUser.save();
+        
+        const host = req.get('host');
         await sendVerificationMail(email,host,token);
 
         res.send({"response":"Registration successful"});
@@ -45,10 +47,10 @@ module.exports.signup_post = async (req, res) => {
 }
 
 module.exports.login_post = async (req, res) => {
-    const { email, passwd } = req.body;
-
+    
     try {
-
+        const { email, passwd } = req.body;
+        
         const student = await Student.findOne({ email: email });
         if (student) {
 
@@ -64,7 +66,7 @@ module.exports.login_post = async (req, res) => {
                 const duration = 7 * 24 * 60 * 60;
                 const token = createJWT(student.id, duration);
                 res.cookie('jwt', token, { httpOnly: true, maxAge: duration * 1000 });
-                res.status(200).json({ student: student.id });
+                res.status(200).json({ token });
             } else {
                 res.status(400).send("Incorrect password");
             }
@@ -88,7 +90,7 @@ module.exports.verify_get = async (req, res) => {
             return res.status(400).send("Invalid token - None provided");
         }
 
-        const verified = await verifyEmail(token);
+        const verified = await verifyEmail('student',token);
 
         if (verified) {
             res.send("Email verified");
@@ -122,7 +124,7 @@ module.exports.forgot_post = async (req, res) => {
         }
         const host = req.get('host');
 
-        forgot_passwd(host,student);
+        await forgot_passwd(host,student);
         res.send("Password reset link sent to email");
     } catch (err) {
         console.log(err);
@@ -176,7 +178,7 @@ module.exports.reset_post = async (req, res) => {
             token: token
         }
 
-        const resetStatus = await reset_passwd(username,forgot,new_passwd,confirm_passwd);
+        const resetStatus = await reset_passwd('student',username,forgot,new_passwd,confirm_passwd);
         
         if (resetStatus) {
             res.send("Password changed");
@@ -201,7 +203,7 @@ module.exports.change_passwd_post = async (req, res) => {
             old_passwd: old_passwd,
         }
 
-        const resetStatus = await reset_passwd(username,forgot,new_passwd,confirm_passwd);
+        const resetStatus = await reset_passwd('student',username,forgot,new_passwd,confirm_passwd);
         
         if (resetStatus) {
             res.send("Password changed");

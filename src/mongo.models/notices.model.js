@@ -27,6 +27,6 @@ const noticeSchema = new mongoose.Schema({
     },
 });
 
-const Notice = mongoose.model('Notice', noticeSchema);
+const Notice = mongoose.model('Notices', noticeSchema);
 
 module.exports = Notice;

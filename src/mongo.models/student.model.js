@@ -1,10 +1,6 @@
-// Testing the user authentication on locally hosted mongo server
-// Production:: npm u mongoose
 
-require('dotenv').config();
 const mongoose = require("mongoose");
 const { isEmail } = require('validator');
-const bcrypt = require('bcrypt');
 
 // Student schema
 // first_name , last_name, username, email, passwd, confirmation_token, verified

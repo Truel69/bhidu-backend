@@ -1,16 +1,8 @@
 
-require('dotenv').config();
 const mongoose = require("mongoose");
 const { isEmail } = require('validator');
-const bcrypt = require('bcrypt');
 
 const superAdminSchema = new mongoose.Schema({
-    id: {
-        type: Number,
-        autoIncrement: true,
-        primaryKey: true,
-        allowNull: false
-    },
     full_name: {
         type: String,
         required: true,
@@ -43,23 +35,8 @@ const superAdminSchema = new mongoose.Schema({
 
 });
 
-
-superAdminSchema.pre('save', async function(next) {
-
-    // Sequelize uses before create but mongoose uses pre save so everytime the document is saved it gets resetted to this so to avoid that we use this if statement
-    if (!this.email_verified){
-
-        this.email_verified = false;
-        this.confirmation_token = randomString(15);
-    }
-
-    next();
-});
-
-
-const Student = mongoose.model("Student", studentAuthSchema);
+const SuperAdmin = mongoose.model("SuperAdmin", superAdminSchema);
 
 // Export the model
-
-module.exports = Student;
+module.exports = SuperAdmin;
 

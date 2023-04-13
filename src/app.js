@@ -21,15 +21,14 @@ app.set("views", path.join(__dirname, "/views"));
 app.set("view engine", "ejs");
 app.use(express.static(path.join(__dirname, "/public")));
 
-
-// Testing db
+// Mongoose connection
+mongoose.set('strictQuery', true);
 mongoose.connect(process.env.MONGODB_URL, {
     useNewUrlParser: true,
 });
 
 
 // Error handling
-
 // app.use((req, res, next) => {
 //     const error = new Error("Not found");
 //     error.status = 404;
@@ -52,9 +51,12 @@ const studentAuthRoutes = require("./routes/student.auth.route");
 app.use('/student',studentAuthRoutes);
 
 // Super Admin authentication routes
-// const superAdminAuthRoutes = require("./routes/super.admin.auth.route");
-// app.use('/superadmin',superAdminAuthRoutes);
+const superAdminAuthRoutes = require("./routes/super.admin.auth.route");
+app.use('/superadmin',superAdminAuthRoutes);
 
+// Faculty authentication routes
+// const facultyAuthRoutes = require("./routes/faculty.auth.route.js");
+// app.use('/faculty',facultyAuthRoutes);
 
 // Onbbording routes
 // const oboardingRoutes = require("./routes/onboarding.route");

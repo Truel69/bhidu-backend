@@ -20,7 +20,7 @@ router.post('/reset', studentAuthController.reset_post);
 // Password change
 router.post('/change_pwd', requireAuth, studentAuthController.change_passwd_post);
 
-// Post routes
+
 router.post('/signup', studentAuthController.signup_post);
 router.post('/login', studentAuthController.login_post);
 
